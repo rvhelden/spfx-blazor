@@ -13,11 +13,11 @@ build.rig.getTasks = function () {
   return result;
 };
 
-let hbsCopy = build.subTask('dllCopy', (gulp, buildOptions, done) => {
-  gulp.src('./src/webparts/helloWorld/_framework/*').pipe(gulp.dest('./lib/_framework'));
+let copyBlazor = build.subTask('copy-blazor', (gulp, buildOptions, done) => {
+  gulp.src('./src/webparts/helloWorld/_framework/*').pipe(gulp.dest('./lib/webparts/helloWorld/_framework'));
   done();
 })
 
-build.rig.addPreBuildTask(hbsCopy);
+build.rig.addPreBuildTask(copyBlazor);
 
 build.initialize(require('gulp'));

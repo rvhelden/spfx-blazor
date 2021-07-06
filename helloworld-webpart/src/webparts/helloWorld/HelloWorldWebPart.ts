@@ -24,28 +24,58 @@ export interface IHelloWorldWebPartProps {
 
 export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorldWebPartProps> {
 
+  private onInitialize() {
+    const blazor = (window as any).Blazor;
+    console.log(blazor);
+    //blazor._internal.navigationManager.getBaseURI = () => '/lib/webparts/helloWorld/';
+
+    const originalFetch = window.fetch;
+    window.fetch = function(requestInfo, options) {
+        if (requestInfo === '_framework/blazor.boot.json') {
+            return originalFetch('/lib/webparts/helloWorld/_framework/blazor.boot.json', options);
+        } else {
+            // Use default logic
+            return originalFetch.apply(this, arguments);
+        }
+    };
+
+    blazor.start({
+      loadBootResource: (
+        type: string,
+        name: string,
+        defaultUri: string,
+        integrity: string
+      ) => {
+
+        console.log(`loading ${name} (${type}) from ${defaultUri}`);
+        if (type === 'dotnetjs') {
+          return `/lib/webparts/helloWorld/_framework/${defaultUri.slice(defaultUri.indexOf('dotnet'))}`;
+        } else {
+          defaultUri = `/lib/webparts/helloWorld/${defaultUri}`;
+        }
+
+        return fetch(defaultUri, { 
+          headers: { 'content-type': type === 'dotnetwasm' ? 'application/wasm' : 'application/octet-stream' }
+        });
+      },
+    });
+  }
+
   public render(): void {
 
-    //const shadowRoot = this.domElement.attachShadow({ mode: 'closed' });
-    
-    const script = document.createElement('script');
-    script.src = 'lib/webparts/helloWorld/_framework/blazor.webassembly.js';
-    script.setAttribute('autostart', 'false');
+    const existingScript = document.getElementById('helloWorldWA');
+    if (existingScript == null) {
+      const script = document.createElement('script');
+      script.id = 'helloWorldWA';
+      script.src = '/lib/webparts/helloWorld/_framework/blazor.webassembly.js';
+      script.setAttribute('autostart', 'false');
 
-    const container = document.createElement('div');
-    container.appendChild(document.createElement('app'));
+      script.addEventListener('load', this.onInitialize.bind(this));
 
-    container.appendChild(script);
+      this.domElement.appendChild(script);
+    }
 
-    this.domElement.appendChild(container);
-
-    script.addEventListener('load', () => {
-      const blazor = (window as any).Blazor;
-      console.log(blazor);
-      blazor._internal.navigationManager.getBaseURI = () => 'lib/webparts/helloWorld/';
-    })
-
-    /*this.domElement.innerHTML = `
+    this.domElement.innerHTML = `
         <div class="${styles.helloWorld}">
           <div class="${styles.container}">
             <div class="${styles.row}">
@@ -55,7 +85,7 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
               </div>
             </div>
           </div>
-        </div>`;*/
+        </div>`;
   }
 
   protected get dataVersion(): Version {

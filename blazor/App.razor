@@ -1,0 +1,13 @@
+﻿<h1>Hoi van blazor @counter</h1>
+<button @onclick="Increment">Klik hier!</button>
+
+@code {
+    private int counter = 1;
+
+    private void Increment()
+    {
+        this.counter++;
+        Console.WriteLine($"New count: {this.counter}");
+    }
+
+}
