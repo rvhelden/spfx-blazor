@@ -1,0 +1,7 @@
+{
+    "includeExtensions": [
+        "dll",
+        "br",
+        "gz"
+    ]
+}
